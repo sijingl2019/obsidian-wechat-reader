@@ -1,0 +1,9 @@
+{
+	"id": "wechat-reader",
+	"name": "WeChat Reader",
+	"version": "0.1.0",
+	"minAppVersion": "1.4.0",
+	"description": "在 Obsidian 中登录微信读书、阅读图书，并在侧边笔记中摘录与同步划线。",
+	"author": "sijinglin",
+	"isDesktopOnly": true
+}
