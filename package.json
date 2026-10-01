@@ -24,9 +24,9 @@
 		"vite": "^8.3.2",
 		"vitest": "^5.0.3"
 	},
-	"author": "sijingl2013",
+	"author": "sijingl2019",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sijingl2013/obsidian-wechat-reader"
+		"url": "https://github.com/sijingl2019/obsidian-wechat-reader"
 	}
 }
