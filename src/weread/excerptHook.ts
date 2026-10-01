@@ -47,7 +47,7 @@ export const EXCERPT_HOOK_SCRIPT = `
 export function parseExcerptMessage(message: string): string | null {
 	if (!message.startsWith(EXCERPT_PREFIX)) return null;
 	try {
-		const text = JSON.parse(message.slice(EXCERPT_PREFIX.length)).text;
+		const { text } = JSON.parse(message.slice(EXCERPT_PREFIX.length)) as { text?: unknown };
 		return typeof text === "string" && text.trim() ? text.trim() : null;
 	} catch {
 		return null;

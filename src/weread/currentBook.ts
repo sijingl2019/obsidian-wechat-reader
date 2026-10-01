@@ -27,7 +27,7 @@ export const CURRENT_BOOK_SCRIPT = `(() => {
 	};
 })()`;
 
-interface RawState {
+export interface RawState {
 	reader?: {
 		bookId?: string | number;
 		bookInfo?: { bookId?: string | number; title?: string; author?: string; cover?: string };

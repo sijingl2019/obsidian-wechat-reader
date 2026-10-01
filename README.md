@@ -4,6 +4,8 @@
 
 > 仅支持桌面版 Obsidian（依赖 Electron webview）。
 
+**English:** WeChat Reader embeds the official [WeRead (微信读书)](https://weread.qq.com) web reader in an Obsidian pane. Log in with the WeChat QR code, open any book on your shelf, and the plugin opens a note for that book next to the reader. You can sync your WeRead highlights and thoughts into the note by chapter, and passages you copy in the reader are appended as excerpts. Desktop only.
+
 ## 功能
 
 - **登录**：点击左侧 ribbon 的 📖 图标（或命令「打开微信读书」），在阅读器页面中点「登录」，用微信扫码。登录状态保存在插件专用的会话里，重启 Obsidian 不需要重新登录。
@@ -29,6 +31,13 @@ npm run dev     # 监听构建
 ```
 
 把本目录（含 `manifest.json`、`main.js`、`styles.css`）链接或复制到 `<vault>/.obsidian/plugins/wechat-reader/`，然后在「第三方插件」里启用。
+
+## 披露 / Disclosures
+
+- **需要账号 / Account required:** 需要微信读书账号（通过微信扫码登录）。Requires a WeRead account, logged in via the official WeChat QR code.
+- **网络访问 / Network use:** 插件只访问 `weread.qq.com`：在内嵌网页中阅读，并调用其网页版接口读取你的书籍信息、划线和想法。不向任何其他服务发送数据，没有统计或遥测。The plugin only talks to `weread.qq.com`, to display the reader and to read your book info, highlights and thoughts. No data is sent anywhere else; no telemetry.
+- **本地文件 / Files:** 只在设置的笔记文件夹中创建和修改每本书的笔记。Only creates and edits per-book notes inside the configured folder.
+- 本插件为第三方开发，与腾讯 / 微信读书无关。This is an unofficial plugin, not affiliated with Tencent or WeRead.
 
 ## 说明
 

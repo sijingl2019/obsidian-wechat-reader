@@ -6,6 +6,19 @@ import { DEFAULT_SETTINGS, WechatReaderSettingTab, type WechatReaderSettings } f
 import { WereadError } from "./weread/api";
 import type { BookMeta } from "./weread/types";
 
+interface ElectronSession {
+	clearStorageData(): Promise<void>;
+}
+
+/** The webview's session lives in Electron's main process; reach it through @electron/remote. */
+function electronSession(partition: string): ElectronSession | undefined {
+	const req = (window as Window & { require?: (id: string) => unknown }).require;
+	const electron = req?.("electron") as
+		| { remote?: { session?: { fromPartition(p: string): ElectronSession } } }
+		| undefined;
+	return electron?.remote?.session?.fromPartition(partition);
+}
+
 export default class WechatReaderPlugin extends Plugin {
 	settings!: WechatReaderSettings;
 	private notes!: BookNotes;
@@ -14,7 +27,7 @@ export default class WechatReaderPlugin extends Plugin {
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		if (!Platform.isDesktopApp) {
-			new Notice("WeChat Reader 仅支持桌面版 Obsidian");
+			new Notice("本插件仅支持桌面版 Obsidian");
 			return;
 		}
 		this.notes = new BookNotes(this.app, () => this.settings.noteFolder);
@@ -38,7 +51,7 @@ export default class WechatReaderPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = { ...DEFAULT_SETTINGS, ...((await this.loadData()) as Partial<WechatReaderSettings> | null) };
 	}
 
 	async saveSettings(): Promise<void> {
@@ -121,8 +134,7 @@ export default class WechatReaderPlugin extends Plugin {
 
 	async logout(): Promise<void> {
 		try {
-			const electron = (window as any).require?.("electron");
-			const session = electron?.remote?.session?.fromPartition(WEBVIEW_PARTITION);
+			const session = electronSession(WEBVIEW_PARTITION);
 			if (!session) throw new Error("无法访问 Electron session");
 			await session.clearStorageData();
 		} catch (e) {

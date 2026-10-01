@@ -47,7 +47,7 @@ export function formatHighlights(input: {
 	const byChapter = new Map<number, Map<string, Entry>>();
 	const entriesOf = (uid: number) => {
 		let entries = byChapter.get(uid);
-		if (!entries) byChapter.set(uid, (entries = new Map()));
+		if (!entries) byChapter.set(uid, (entries = new Map<string, Entry>()));
 		return entries;
 	};
 

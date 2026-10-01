@@ -64,7 +64,6 @@ export class WechatReaderSettingTab extends PluginSettingTab {
 			.addButton((button) =>
 				button
 					.setButtonText("退出登录")
-					.setWarning()
 					.onClick(async () => {
 						await this.plugin.logout();
 						new Notice("已退出微信读书登录");

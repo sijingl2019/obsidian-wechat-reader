@@ -2,8 +2,9 @@
 	"id": "wechat-reader",
 	"name": "WeChat Reader",
 	"version": "0.1.0",
-	"minAppVersion": "1.4.0",
-	"description": "在 Obsidian 中登录微信读书、阅读图书，并在侧边笔记中摘录与同步划线。",
-	"author": "sijinglin",
+	"minAppVersion": "1.7.2",
+	"description": "Read your WeRead (微信读书) books in a side pane, keep a note per book, sync highlights and thoughts, and capture copied passages as excerpts.",
+	"author": "sijingl2013",
+	"authorUrl": "https://github.com/sijingl2013",
 	"isDesktopOnly": true
 }

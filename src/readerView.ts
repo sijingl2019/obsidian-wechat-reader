@@ -1,7 +1,7 @@
 import { ItemView, WorkspaceLeaf, setIcon } from "obsidian";
 import type WechatReaderPlugin from "./main";
 import { WereadApi, buildFetchScript } from "./weread/api";
-import { CURRENT_BOOK_SCRIPT, WEREAD_ORIGIN, isReaderUrl, parseCurrentBook } from "./weread/currentBook";
+import { CURRENT_BOOK_SCRIPT, WEREAD_ORIGIN, isReaderUrl, parseCurrentBook, type RawState } from "./weread/currentBook";
 import { EXCERPT_HOOK_SCRIPT, parseExcerptMessage } from "./weread/excerptHook";
 import type { BookMeta } from "./weread/types";
 
@@ -22,7 +22,7 @@ interface WebviewElement extends HTMLElement {
 	goForward(): void;
 	reload(): void;
 	loadURL(url: string): Promise<void>;
-	executeJavaScript(code: string): Promise<any>;
+	executeJavaScript(code: string): Promise<unknown>;
 }
 
 export class ReaderView extends ItemView {
@@ -70,12 +70,10 @@ export class ReaderView extends ItemView {
 		this.toolbarButton(toolbar, "file-text", "打开本书笔记", () => this.plugin.openBookNote());
 		this.toolbarButton(toolbar, "refresh-ccw", "同步划线与想法", () => this.plugin.syncHighlights());
 
-		const webview = document.createElement("webview") as WebviewElement;
-		webview.addClass("wechat-reader-webview");
-		webview.setAttribute("partition", WEBVIEW_PARTITION);
-		webview.setAttribute("useragent", USER_AGENT);
-		webview.setAttribute("src", HOME_URL);
-		root.appendChild(webview);
+		const webview = root.createEl("webview" as keyof HTMLElementTagNameMap, {
+			cls: "wechat-reader-webview",
+			attr: { partition: WEBVIEW_PARTITION, useragent: USER_AGENT, src: HOME_URL },
+		}) as unknown as WebviewElement;
 		this.webview = webview;
 
 		webview.addEventListener("dom-ready", () => {
@@ -103,7 +101,7 @@ export class ReaderView extends ItemView {
 		this.ready = false;
 	}
 
-	async runInPage(code: string): Promise<any> {
+	async runInPage(code: string): Promise<unknown> {
 		if (!this.ready || !this.webview.getURL().startsWith(WEREAD_ORIGIN)) {
 			throw new Error("微信读书页面尚未加载");
 		}
@@ -113,7 +111,7 @@ export class ReaderView extends ItemView {
 	/** Re-reads the current chapter title; the book itself is tracked on navigation. */
 	async currentChapter(): Promise<string | undefined> {
 		try {
-			return parseCurrentBook(await this.runInPage(CURRENT_BOOK_SCRIPT))?.chapter;
+			return parseCurrentBook((await this.runInPage(CURRENT_BOOK_SCRIPT)) as RawState)?.chapter;
 		} catch {
 			return undefined;
 		}
@@ -132,7 +130,7 @@ export class ReaderView extends ItemView {
 		// The reader is a SPA; its state may land a little after navigation.
 		for (let attempt = 0; attempt < 20 && token === this.lookupToken; attempt++) {
 			try {
-				const parsed = parseCurrentBook(await this.runInPage(CURRENT_BOOK_SCRIPT));
+				const parsed = parseCurrentBook((await this.runInPage(CURRENT_BOOK_SCRIPT)) as RawState);
 				if (parsed && token === this.lookupToken) {
 					const changed = parsed.book.bookId !== this.currentBook?.bookId || parsed.book.title !== this.currentBook?.title;
 					this.setBook(parsed.book);

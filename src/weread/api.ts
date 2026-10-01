@@ -31,24 +31,56 @@ export function buildFetchScript(path: string, body?: unknown): string {
 	}))`;
 }
 
-type Json = Record<string, any>;
+interface ErrorFields {
+	errcode?: number;
+	errCode?: number;
+	errmsg?: string;
+	errMsg?: string;
+}
+
+interface RawBookInfo {
+	bookId?: string | number;
+	title: string;
+	author?: string;
+	cover?: string;
+}
+
+interface RawBookmarkList {
+	updated?: Bookmark[];
+}
+
+interface RawReview {
+	type?: number;
+	chapterUid?: number;
+	range?: string;
+	abstract?: string;
+	content: string;
+}
+
+interface RawReviewList {
+	reviews?: { review: RawReview }[];
+}
+
+interface RawChapterInfos {
+	data?: { updated?: Chapter[] }[];
+}
 
 export class WereadApi {
 	constructor(private readonly fetcher: Fetcher) {}
 
-	private async request(path: string, body?: unknown): Promise<Json> {
-		const res = (await this.fetcher(path, body)) as Json;
+	private async request<T>(path: string, body?: unknown): Promise<T> {
+		const res = (await this.fetcher(path, body)) as (T & ErrorFields) | null;
 		const code = res?.errcode ?? res?.errCode;
 		if (typeof code === "number" && code !== 0) {
-			throw new WereadError(`微信读书接口错误 ${code}: ${res.errmsg ?? res.errMsg ?? ""}`, code);
+			throw new WereadError(`微信读书接口错误 ${code}: ${res?.errmsg ?? res?.errMsg ?? ""}`, code);
 		}
-		return res;
+		return (res ?? {}) as T;
 	}
 
 	/** Probes an endpoint that needs a session; login errors mean "not logged in". */
 	async isLoggedIn(): Promise<boolean> {
 		try {
-			await this.request("/web/shelf/sync");
+			await this.request<unknown>("/web/shelf/sync");
 			return true;
 		} catch (e) {
 			if (e instanceof WereadError && e.isLoginError) return false;
@@ -57,13 +89,13 @@ export class WereadApi {
 	}
 
 	async getBookInfo(bookId: string): Promise<BookMeta> {
-		const res = await this.request(`/web/book/info?bookId=${encodeURIComponent(bookId)}`);
+		const res = await this.request<RawBookInfo>(`/web/book/info?bookId=${encodeURIComponent(bookId)}`);
 		return { bookId: String(res.bookId ?? bookId), title: res.title, author: res.author, cover: res.cover };
 	}
 
 	async getBookmarks(bookId: string): Promise<Bookmark[]> {
-		const res = await this.request(`/web/book/bookmarklist?bookId=${encodeURIComponent(bookId)}`);
-		return ((res.updated ?? []) as Json[]).map((m) => ({
+		const res = await this.request<RawBookmarkList>(`/web/book/bookmarklist?bookId=${encodeURIComponent(bookId)}`);
+		return (res.updated ?? []).map((m) => ({
 			chapterUid: m.chapterUid,
 			range: m.range,
 			markText: m.markText,
@@ -71,10 +103,10 @@ export class WereadApi {
 	}
 
 	async getReviews(bookId: string): Promise<Review[]> {
-		const res = await this.request(
+		const res = await this.request<RawReviewList>(
 			`/web/review/list?bookId=${encodeURIComponent(bookId)}&listType=11&mine=1&synckey=0`,
 		);
-		return ((res.reviews ?? []) as Json[]).map(({ review: r }) =>
+		return (res.reviews ?? []).map(({ review: r }) =>
 			r.type === 4 || r.chapterUid === undefined
 				? { content: r.content }
 				: { chapterUid: r.chapterUid, range: r.range, abstract: r.abstract, content: r.content },
@@ -82,8 +114,8 @@ export class WereadApi {
 	}
 
 	async getChapters(bookId: string): Promise<Chapter[]> {
-		const res = await this.request("/web/book/chapterInfos", { bookIds: [bookId] });
-		const updated = ((res.data ?? [])[0]?.updated ?? []) as Json[];
+		const res = await this.request<RawChapterInfos>("/web/book/chapterInfos", { bookIds: [bookId] });
+		const updated = res.data?.[0]?.updated ?? [];
 		return updated.map((c) => ({ chapterUid: c.chapterUid, chapterIdx: c.chapterIdx, title: c.title }));
 	}
 
